@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafos ponderados en AlquiPadel · Grupo A²</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/monokai.min.css">
+<style>
+:root{--c1:#1d4f8c;--c2:#0c2a4d;--linea:#f4f7fb;--bola:#e8e45a;--suave:#a9c1dd;--panel:rgba(8,28,54,.72)}
+html,body{background:#071c36}
+.reveal{font-family:'Barlow',Arial,sans-serif;font-size:30px;color:var(--linea)}
+.reveal .slides{text-align:left}
+.reveal .slides section{box-sizing:border-box;padding:52px 70px;height:100%;
+  background:
+   linear-gradient(90deg,transparent 0 91.5%,rgba(244,247,251,.16) 91.5% 91.8%,transparent 91.8%),
+   linear-gradient(0deg,transparent 0 12%,rgba(244,247,251,.16) 12% 12.4%,transparent 12.4%),
+   radial-gradient(120% 100% at 15% 0%,var(--c1),var(--c2));
+  box-shadow:inset 0 0 0 8px rgba(244,247,251,.9),inset 0 0 0 20px var(--c2)}
+.reveal h1,.reveal h2,.reveal h3{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;text-transform:none;color:var(--linea);margin:0 0 .4em;line-height:.98;letter-spacing:.01em}
+.reveal h1{font-size:3.3em}.reveal h2{font-size:2.2em}.reveal h3{font-size:1.15em;color:var(--bola)}
+.reveal p,.reveal li{line-height:1.35}.reveal ul{margin:0;padding-left:1.1em}.reveal li{margin:.4em 0}
+.reveal pre{width:100%;box-shadow:none;font-size:.48em;margin:0}
+.reveal pre code{max-height:540px;padding:18px 24px;border-radius:8px}
+.sub{color:var(--suave);font-size:.78em}
+.panel{background:var(--panel);border-radius:10px;padding:.7em 1em}
+.formula{background:var(--panel);border-left:8px solid var(--bola);padding:.55em .9em;font-family:Consolas,Menlo,monospace;font-size:.8em;border-radius:0 8px 8px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+table.t{border-collapse:collapse;font-size:.72em;width:100%}
+table.t td,table.t th{border-bottom:1px solid rgba(169,193,221,.4);padding:.4em .55em;text-align:left}
+table.t th{color:var(--bola);font-family:'Barlow Condensed',sans-serif;font-size:1.15em}
+.pie{position:fixed;left:48px;bottom:30px;z-index:5;pointer-events:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;color:var(--suave);letter-spacing:.04em}
+.pie b{color:var(--bola)}
+/* portada */
+.portada{display:flex;flex-direction:column;justify-content:center}
+.portada .logo{width:170px;height:170px;margin-bottom:18px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
+.portada h1{font-size:3.1em;max-width:900px}
+.ficha{display:flex;gap:30px;margin-top:20px;font-size:.78em;color:var(--suave)}
+.ficha b{display:block;color:var(--linea);font-size:1.1em}
+.grupo{display:inline-block;background:var(--bola);color:var(--c2);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.05em;padding:.05em .6em;border-radius:99px;margin-bottom:.5em}
+/* grafo */
+#modelo h2{margin-bottom:.15em}
+#grafo{width:100%;height:auto;max-height:470px}
+.sel{display:flex;gap:12px;align-items:center;font-size:.7em;margin:.2em 0}
+.sel button,#demo button,#demo select{font:inherit;font-size:1em;padding:.3em .8em;border-radius:99px;border:2px solid var(--linea);background:transparent;color:var(--linea);cursor:pointer}
+.sel button.on{background:var(--bola);color:var(--c2);border-color:var(--bola);font-weight:600}
+/* demo */
+#demo h2{margin-bottom:.2em;font-size:1.9em}
+#demo .grid{display:grid;grid-template-columns:330px 1fr;gap:28px}
+#demo .ctl{font-size:.62em;display:flex;flex-direction:column;gap:12px}
+#demo .ctl label{display:flex;flex-direction:column;gap:4px;color:var(--suave)}
+#demo .ctl select{border-radius:6px;background:var(--c2)}
+#demo input[type=range]{width:100%;accent-color:var(--bola)}
+#demo .ctl output{color:var(--bola);font-weight:600}
+#demo .stats{font-size:.9em;border-top:1px solid rgba(169,193,221,.4);padding-top:10px;color:var(--suave)}
+#lista{display:flex;flex-direction:column;gap:9px;font-size:.62em}
+.card{display:grid;grid-template-columns:44px 1fr 150px;gap:12px;align-items:center;background:var(--panel);border-radius:10px;padding:.5em .8em;border-left:6px solid var(--suave)}
+.card.top{border-left-color:var(--bola)}
+.card .rk{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:2em;color:var(--bola)}
+.card .d{color:var(--suave);font-size:.9em}
+.card .w{text-align:right;font-weight:600}
+.barra{height:8px;background:rgba(244,247,251,.18);border-radius:4px;margin-top:4px}
+.barra i{display:block;height:100%;background:var(--bola);border-radius:4px}
+.vacio{font-size:.7em;color:var(--suave)}
+.reveal .controls{color:var(--bola);z-index:50;font-size:34px}
+.reveal .controls button{opacity:.95}
+:focus-visible{outline:3px solid var(--bola);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="portada">
+  <svg class="logo" viewBox="0 0 200 200" role="img" aria-label="Logo A al cuadrado">
+    <circle cx="100" cy="100" r="94" fill="#e8e45a"/>
+    <path d="M30 40 Q75 100 30 160 M170 40 Q125 100 170 160" fill="none" stroke="#0c2a4d" stroke-opacity=".28" stroke-width="7"/>
+    <text x="78" y="138" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="800" font-size="130" fill="#0c2a4d">A</text>
+    <text x="138" y="88" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="800" font-size="68" fill="#0c2a4d">2</text>
+  </svg>
+  <span class="grupo">Grupo A²</span>
+  <h1>Recomendación de partidos abiertos con grafos ponderados</h1>
+  <p class="sub" style="font-size:.9em;margin:0">Caso de aplicación: AlquiPadel</p>
+  <div class="ficha">
+    <div>Materia<b>Algoritmos y Estructuras de Datos 3</b></div>
+    <div>Alumnos<b>Agustín Ramírez · Agustín Díaz</b></div>
+    <div>Carrera<b>Tecnicatura en Análisis de Sistemas</b></div>
+  </div>
+</section>
+
+<section>
+  <h2>El problema</h2>
+  <div class="cols">
+    <ul>
+      <li>Un partido abierto necesita jugadores para completarse.</li>
+      <li>Hoy cada jugador revisa la lista completa y decide solo.</li>
+      <li>Un partido de otra categoría o en otra ciudad casi nunca se completa.</li>
+    </ul>
+    <div class="panel"><h3>Objetivo</h3><p style="margin:0">Mostrarle a cada jugador, primero, los partidos que mejor le calzan por <b>categoría</b> y <b>localidad</b>.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>¿Por qué grafos?</h2>
+  <div class="cols">
+    <ul>
+      <li><b>Nodos:</b> jugadores y partidos.</li>
+      <li><b>Aristas:</b> compatibilidad entre un jugador y un partido.</li>
+      <li><b>Peso:</b> número de 0 a 1 que mide esa compatibilidad.</li>
+    </ul>
+    <div class="panel"><p style="margin:0">Es un <b>grafo bipartito ponderado</b>: las aristas solo unen jugadores con partidos, nunca jugador con jugador.</p>
+    <p class="sub" style="margin:.6em 0 0">Recomendar = ordenar las aristas de un jugador por peso.</p></div>
+  </div>
+</section>
+
+<section id="modelo">
+  <h2>El modelo</h2>
+  <div class="sel" role="group" aria-label="Elegir jugador">
+    <span>Mirá las aristas de:</span>
+    <button data-j="J1" class="on">J1</button><button data-j="J2">J2</button><button data-j="J3">J3</button>
+  </div>
+  <svg id="grafo" viewBox="0 0 1000 440" role="img" aria-label="Grafo bipartito de jugadores y partidos con pesos"></svg>
+  <p class="sub" style="margin:0">Círculo blanco = jugador · círculo amarillo = partido abierto · número = peso. Cuanto más cerca de 1, mejor recomendación.</p>
+</section>
+
+<section>
+  <h2>Cálculo del peso</h2>
+  <div class="formula">peso = 0.6 × score_categoría + 0.4 × score_localidad</div>
+  <div class="cols" style="margin-top:.9em">
+    <table class="t"><tr><th>Categoría</th><th>Score</th></tr>
+      <tr><td>Misma</td><td>1.0</td></tr><tr><td>Difiere en 1 nivel</td><td>0.5</td></tr><tr><td>Difiere en 2 o más</td><td>0</td></tr></table>
+    <table class="t"><tr><th>Localidad</th><th>Score</th></tr>
+      <tr><td>Misma</td><td>1.0</td></tr><tr><td>Vecina</td><td>0.5</td></tr><tr><td>Otra</td><td>0</td></tr></table>
+  </div>
+  <p class="sub">Los pesos 0.6 / 0.4 son ajustables (probalo en la demo). La categoría pesa más porque un partido desparejo no se disfruta.</p>
+</section>
+
+<section>
+  <h2>Implementación: el grafo</h2>
+  <p class="sub" style="margin-top:0">Lista de adyacencia: el espacio crece con las aristas y recorrer vecinos es directo.</p>
+  <pre><code class="language-javascript" data-trim data-noescape>
+class GrafoPonderado {
+  constructor() { this.adyacencia = new Map(); }
+
+  agregarNodo(nodo) {
+    if (!this.adyacencia.has(nodo)) this.adyacencia.set(nodo, []);
+  }
+
+  agregarArista(origen, destino, peso) {
+    this.agregarNodo(origen);
+    this.agregarNodo(destino);
+    this.adyacencia.get(origen).push({ destino, peso });
+  }
+
+  vecinos(nodo) { return this.adyacencia.get(nodo) ?? []; }
+}
+  </code></pre>
+</section>
+
+<section>
+  <h2>Implementación: pesos y recomendación</h2>
+  <pre><code class="language-javascript" data-trim data-noescape>
+const CATEGORIAS = ["8va","7ma","6ta","5ta","4ta","3ra","2da","1ra"];
+
+function scoreCategoria(a, b) {
+  const dif = Math.abs(CATEGORIAS.indexOf(a) - CATEGORIAS.indexOf(b));
+  return dif === 0 ? 1 : dif === 1 ? 0.5 : 0;
+}
+function scoreLocalidad(a, b, vecinas) {
+  if (a === b) return 1;
+  return (vecinas[a] ?? []).includes(b) ? 0.5 : 0;
+}
+function calcularPeso(j, p, vecinas, wCat = 0.6, wLoc = 0.4) {
+  return wCat * scoreCategoria(j.categoria, p.categoria)
+       + wLoc * scoreLocalidad(j.localidad, p.localidad, vecinas);
+}
+function construirGrafo(jugadores, partidos, vecinas) {
+  const g = new GrafoPonderado();
+  for (const j of jugadores) for (const p of partidos) {
+    const peso = calcularPeso(j, p, vecinas);
+    if (peso > 0) g.agregarArista(j.id, p.id, peso);
+  }
+  return g;
+}
+function recomendar(g, idJugador, n = 3) {
+  return [...g.vecinos(idJugador)].sort((a, b) => b.peso - a.peso).slice(0, n);
+}
+  </code></pre>
+</section>
+
+<section id="demo">
+  <h2>Demo en vivo</h2>
+  <div class="grid">
+    <div class="ctl">
+      <label>Categoría del jugador <select id="selCat"></select></label>
+      <label>Localidad del jugador <select id="selLoc"></select></label>
+      <label>Importancia de la categoría <output id="outW"></output>
+        <input type="range" id="rngW" min="0" max="100" step="5" value="60"></label>
+      <label>Cantidad de recomendaciones <output id="outN"></output>
+        <input type="range" id="rngN" min="1" max="8" step="1" value="4"></label>
+      <label>Peso mínimo para recomendar <output id="outM"></output>
+        <input type="range" id="rngM" min="0" max="90" step="10" value="0"></label>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div id="lista" aria-live="polite"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Complejidad</h2>
+  <table class="t">
+    <tr><th>Operación</th><th>Costo</th></tr>
+    <tr><td>Construir el grafo (J jugadores, P partidos)</td><td>O(J × P)</td></tr>
+    <tr><td>Agregar una arista</td><td>O(1)</td></tr>
+    <tr><td>Recomendar (k aristas del jugador)</td><td>O(k log k)</td></tr>
+    <tr><td>Espacio con lista de adyacencia</td><td>O(J + A)</td></tr>
+  </table>
+  <p class="sub">Con matriz de adyacencia el espacio sería O(J × P), aunque casi todas las celdas valgan 0.</p>
+</section>
+
+<section>
+  <h2>Posibles mejoras</h2>
+  <ul>
+    <li>Sumar criterios al peso: horario, historial y nivel de los otros jugadores.</li>
+    <li>Recorrer jugador → partido → jugador (BFS) para sugerir gente con quien ya jugaste.</li>
+    <li>Usar Dijkstra con costo = 1 − peso para buscar conexiones indirectas.</li>
+    <li>Evitar J × P: calcular solo contra partidos de la misma localidad y vecinas.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Conclusiones</h2>
+  <ul>
+    <li>Un grafo bipartito ponderado representa bien la relación jugador–partido.</li>
+    <li>El peso concentra todos los criterios en un solo número ajustable.</li>
+    <li>Recomendar se reduce a ordenar las aristas de un nodo.</li>
+  </ul>
+  <p style="font-family:'Barlow Condensed',sans-serif;font-size:1.8em;font-weight:800;color:var(--bola)">¿Preguntas? · Grupo A²</p>
+</section>
+
+</div>
+<div class="pie">AlquiPadel</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script>
+class GrafoPonderado {
+  constructor() { this.adyacencia = new Map(); }
+  agregarNodo(n) { if (!this.adyacencia.has(n)) this.adyacencia.set(n, []); }
+  agregarArista(o, d, peso) { this.agregarNodo(o); this.agregarNodo(d); this.adyacencia.get(o).push({ destino: d, peso }); }
+  vecinos(n) { return this.adyacencia.get(n) ?? []; }
+}
+const CATEGORIAS = ["8va","7ma","6ta","5ta","4ta","3ra","2da","1ra"];
+const VECINAS = { "Dolores": ["Maipú","Chascomús"], "Maipú": ["Dolores"], "Chascomús": ["Dolores"], "Ayacucho": ["Maipú"] };
+const scoreCategoria = (a, b) => { const d = Math.abs(CATEGORIAS.indexOf(a) - CATEGORIAS.indexOf(b)); return d === 0 ? 1 : d === 1 ? 0.5 : 0; };
+const scoreLocalidad = (a, b, v) => a === b ? 1 : ((v[a] ?? []).includes(b) ? 0.5 : 0);
+const calcularPeso = (j, p, v, wc = 0.6, wl = 0.4) => wc * scoreCategoria(j.categoria, p.categoria) + wl * scoreLocalidad(j.localidad, p.localidad, v);
+function construirGrafo(js, ps, v, wc = 0.6) {
+  const g = new GrafoPonderado();
+  for (const j of js) for (const p of ps) { const w = calcularPeso(j, p, v, wc, 1 - wc); if (w > 0) g.agregarArista(j.id, p.id, w); }
+  return g;
+}
+const recomendar = (g, id, n = 3) => [...g.vecinos(id)].sort((a, b) => b.peso - a.peso).slice(0, n);
+
+/* Datos de ejemplo: reemplazar por los reales de AlquiPadel */
+const PARTIDOS = [
+  { id: "P1", categoria: "6ta", localidad: "Dolores",   hora: "Sáb 18:00" },
+  { id: "P2", categoria: "5ta", localidad: "Maipú",     hora: "Sáb 20:00" },
+  { id: "P3", categoria: "4ta", localidad: "Dolores",   hora: "Dom 11:00" },
+  { id: "P4", categoria: "7ma", localidad: "Chascomús", hora: "Vie 21:00" },
+  { id: "P5", categoria: "3ra", localidad: "Maipú",     hora: "Dom 17:00" },
+  { id: "P6", categoria: "6ta", localidad: "Chascomús", hora: "Sáb 10:00" },
+  { id: "P7", categoria: "5ta", localidad: "Dolores",   hora: "Vie 19:00" },
+  { id: "P8", categoria: "8va", localidad: "Ayacucho",  hora: "Dom 20:00" },
+  { id: "P9", categoria: "6ta", localidad: "Ayacucho",  hora: "Sáb 16:00" },
+  { id: "P10",categoria: "4ta", localidad: "Maipú",     hora: "Jue 22:00" }
+];
+const JUG_EJ = [
+  { id: "J1", categoria: "6ta", localidad: "Dolores" },
+  { id: "J2", categoria: "4ta", localidad: "Maipú" },
+  { id: "J3", categoria: "6ta", localidad: "Maipú" }
+];
+
+/* ===== Modelo: grafo grande y legible ===== */
+const svg = document.getElementById("grafo"), NS = "http://www.w3.org/2000/svg";
+const PS3 = PARTIDOS.slice(0, 3), G3 = construirGrafo(JUG_EJ, PS3, VECINAS);
+const xJ = 250, xP = 750, Y = [80, 220, 360], TL = [0.22, 0.5, 0.78];
+function dibujar(sel) {
+  svg.innerHTML = "";
+  const el = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt) e.textContent = txt; svg.appendChild(e); };
+  const orden = JUG_EJ.map((j, i) => i).sort((a, b) => (JUG_EJ[a].id === sel) - (JUG_EJ[b].id === sel));
+  for (const i of orden) {
+    const j = JUG_EJ[i], on = j.id === sel;
+    PS3.forEach((p, k) => {
+      const w = G3.vecinos(j.id).find(e => e.destino === p.id)?.peso ?? 0;
+      el("line", { x1: xJ, y1: Y[i], x2: xP, y2: Y[k], stroke: on ? "#e8e45a" : "#a9c1dd", "stroke-width": on ? 2 + w * 7 : 1.5, opacity: on ? 1 : .25, "stroke-dasharray": w === 0 ? "6 8" : "" });
+      const x = xJ + (xP - xJ) * TL[i], y = Y[i] + (Y[k] - Y[i]) * TL[i];
+      el("rect", { x: x - (on ? 34 : 26), y: y - (on ? 19 : 14), width: on ? 68 : 52, height: on ? 38 : 28, rx: 19, fill: on ? "#e8e45a" : "#0c2a4d", opacity: on ? 1 : .6 });
+      el("text", { x, y: y + (on ? 9 : 6), "text-anchor": "middle", "font-size": on ? 26 : 17, "font-weight": 700, fill: on ? "#0c2a4d" : "#a9c1dd" }, w.toFixed(1));
+    });
+  }
+  JUG_EJ.forEach((j, i) => {
+    const on = j.id === sel;
+    el("circle", { cx: xJ, cy: Y[i], r: 42, fill: "#0c2a4d", stroke: "#f4f7fb", "stroke-width": on ? 7 : 3 });
+    el("text", { x: xJ, y: Y[i] + 10, "text-anchor": "middle", "font-size": 30, "font-weight": 700, fill: "#f4f7fb" }, j.id);
+    el("text", { x: xJ - 56, y: Y[i] + 7, "text-anchor": "end", "font-size": 21, fill: "#f4f7fb" }, j.categoria + " · " + j.localidad);
+  });
+  PS3.forEach((p, k) => {
+    el("circle", { cx: xP, cy: Y[k], r: 42, fill: "#0c2a4d", stroke: "#e8e45a", "stroke-width": 5 });
+    el("text", { x: xP, y: Y[k] + 10, "text-anchor": "middle", "font-size": 30, "font-weight": 700, fill: "#e8e45a" }, p.id);
+    el("text", { x: xP + 56, y: Y[k] + 7, "font-size": 21, fill: "#f4f7fb" }, p.categoria + " · " + p.localidad);
+  });
+}
+dibujar("J1");
+document.querySelectorAll(".sel button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".sel button").forEach(x => x.classList.toggle("on", x === b));
+  dibujar(b.dataset.j);
+}));
+
+/* ===== Demo en vivo ===== */
+const $ = id => document.getElementById(id);
+CATEGORIAS.forEach(c => $("selCat").add(new Option(c, c))); $("selCat").value = "6ta";
+Object.keys(VECINAS).forEach(l => $("selLoc").add(new Option(l, l)));
+function demo() {
+  const wc = $("rngW").value / 100, n = +$("rngN").value, minW = $("rngM").value / 100;
+  $("outW").textContent = `categoría ${Math.round(wc * 100)}% · localidad ${Math.round((1 - wc) * 100)}%`;
+  $("outN").textContent = n; $("outM").textContent = minW.toFixed(1);
+  const yo = { id: "YO", categoria: $("selCat").value, localidad: $("selLoc").value };
+  const g = construirGrafo([yo], PARTIDOS, VECINAS, wc);
+  const todas = g.vecinos("YO").length;
+  const rec = recomendar(g, "YO", PARTIDOS.length).filter(r => r.peso >= minW - 1e-9).slice(0, n);
+  $("stats").innerHTML = `Nodos: 1 jugador + ${PARTIDOS.length} partidos<br>Aristas creadas: ${todas} de ${PARTIDOS.length} posibles<br>Recomendados: ${rec.length}`;
+  $("lista").innerHTML = rec.length ? rec.map((r, i) => {
+    const p = PARTIDOS.find(x => x.id === r.destino);
+    const sc = scoreCategoria(yo.categoria, p.categoria), sl = scoreLocalidad(yo.localidad, p.localidad, VECINAS);
+    return `<div class="card${i === 0 ? " top" : ""}"><div class="rk">${i + 1}</div>
+      <div><b>${p.id}</b> · ${p.categoria} · ${p.localidad} · ${p.hora}
+      <div class="d">${wc.toFixed(2)}×${sc} + ${(1 - wc).toFixed(2)}×${sl}</div></div>
+      <div class="w">${r.peso.toFixed(2)}<div class="barra"><i style="width:${Math.round(r.peso * 100)}%"></i></div></div></div>`;
+  }).join("") : `<p class="vacio">Ningún partido supera ese peso mínimo. Bajá el mínimo o cambiá el perfil.</p>`;
+}
+["selCat","selLoc","rngW","rngN","rngM"].forEach(id => $(id).addEventListener("input", demo));
+demo();
+
+Reveal.initialize({ controls: true, controlsLayout: 'bottom-right', controlsBackArrows: 'visible', progress: true, keyboard: true, touch: true, hash: true, width: 1280, height: 720, margin: 0.02, transition: "fade", plugins: [RevealHighlight] });
+</script>
+</body>
+</html>
