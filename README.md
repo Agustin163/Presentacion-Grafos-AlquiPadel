@@ -6,7 +6,7 @@ Presentación del **Grupo A²** para **Algoritmos y Estructuras de Datos 3**, Te
 
 **Caso de aplicación:** AlquiPadel, plataforma de alquiler de canchas de pádel.
 
-🔗 **Ver la presentación:** https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/
+🔗 **Ver la presentación:** presentacion-grafos-alquipadel.html
 
 ## ¿De qué trata?
 
