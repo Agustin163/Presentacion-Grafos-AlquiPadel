@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlquiPadel — Motor Algorítmico de Recomendación | AyED III</title>
+
+    <!-- Google Fonts: Montserrat, Space Grotesk, Inter, Fira Code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Reveal.js 5.x CDN Oficial -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+    <!-- Highlight.js Theme (Monokai Sublime adaptado) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/monokai.min.css">
+
+    <style>
+        :root {
+            --bg-deep: #0A192F;
+            --bg-navy: #112240;
+            --glass-bg: rgba(17, 34, 64, 0.75);
+            --glass-border: rgba(56, 189, 248, 0.22);
+            --lime: #CCFF00;
+            --lime-soft: #A3E635;
+            --cyan: #38BDF8;
+            --coral: #F43F5E;
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+            --font-title: 'Montserrat', 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        html, body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 35%, var(--bg-navy) 0%, var(--bg-deep) 75%);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            overflow: hidden;
+        }
+
+        /* Textura global de cancha de pádel en el fondo (opacity: 0.04) */
+        .padel-court-bg {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.04;
+        }
+
+        .reveal {
+            font-family: var(--font-body);
+            font-size: 28px;
+            color: var(--text-light);
+            z-index: 2;
+        }
+
+        .reveal .slides {
+            text-align: left;
+        }
+
+        .reveal .slides section {
+            padding: 40px 60px;
+            box-sizing: border-box;
+        }
+
+        /* Tipografía General */
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+            font-family: var(--font-title);
+            text-transform: none;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin: 0 0 0.5em 0;
+        }
+
+        .reveal h1 {
+            font-size: 3.1em;
+            background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 45%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .reveal h2 {
+            font-size: 2.1em;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .reveal h2 .accent-bar {
+            display: inline-block;
+            width: 10px;
+            height: 44px;
+            background: var(--lime);
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(204, 255, 0, 0.6);
+        }
+
+        .reveal p, .reveal li {
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #E2E8F0;
+        }
+
+        /* Componentes UI & Glassmorphism */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 28px 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+            position: relative;
+        }
+
+        .glass-card.lime-glow {
+            border: 1.5px solid var(--lime);
+            box-shadow: 0 0 30px rgba(204, 255, 0, 0.12), inset 0 0 20px rgba(204, 255, 0, 0.04);
+        }
+
+        .glass-card.coral-glow {
+            border: 1.5px solid rgba(244, 63, 94, 0.5);
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.1);
+        }
+
+        /* Badges */
+        .sport-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(204, 255, 0, 0.12);
+            border: 1.5px solid var(--lime);
+            color: var(--lime);
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 0.68em;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            padding: 8px 20px;
+            border-radius: 999px;
+            margin-bottom: 24px;
+            box-shadow: 0 0 20px rgba(204, 255, 0, 0.2);
+        }
+
+        .sport-badge .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--lime);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--lime);
+        }
+
+        .tag-pill {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.65em;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tag-cyan { background: rgba(56, 189, 248, 0.15); color: var(--cyan); border: 1px solid rgba(56, 189, 248, 0.35); }
+        .tag-lime { background: rgba(204, 255, 0, 0.15); color: var(--lime); border: 1px solid rgba(204, 255, 0, 0.4); }
+        .tag-coral { background: rgba(244, 63, 94, 0.15); color: var(--coral); border: 1px solid rgba(244, 63, 94, 0.4); }
+
+        /* Grillas de Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+            align-items: stretch;
+        }
+
+        .grid-60-40 {
+            display: grid;
+            grid-template-columns: 1.45fr 1fr;
+            gap: 34px;
+            align-items: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            align-items: stretch;
+        }
+
+        /* Estilos Portada (Slide 1) */
+        .hero-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 860px;
+            position: relative;
+        }
+
+        .hero-court-frame {
+            position: absolute;
+            inset: 10px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1380px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 56px;
+            width: 100%;
+            max-width: 1250px;
+        }
+
+        .meta-box {
+            background: rgba(17, 34, 64, 0.82);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            border-top: 3px solid var(--cyan);
+            border-radius: 12px;
+            padding: 20px 24px;
+            text-align: left;
+        }
+
+        .meta-box.highlight {
+            border-top-color: var(--lime);
+        }
+
+        .meta-label {
+            font-size: 0.62em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .meta-value {
+            font-family: var(--font-title);
+            font-size: 0.95em;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        /* ==========================================
+           BLOQUES DE CÓDIGO / EDITOR WINDOW
+           ========================================== */
+
+        .code-window {
+            /* Variables por bloque: permiten ajustar tamaño sin tocar el layout */
+            --code-fs: 0.62em;
+            --code-line: 1.55;
+            --code-max: 640px;
+            /* Color plano: los bloques clonados por data-line-numbers deben
+               ser opacos para taparse entre sí y coincidir con el marco. */
+            --code-bg: #08111F;
+
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            max-height: var(--code-max);
+            background: var(--code-bg);
+            border: 1px solid rgba(56, 189, 248, 0.42);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(204, 255, 0, 0.05),
+                0 20px 42px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Variante para bloques que viven en media columna */
+        .code-window--compact {
+            --code-fs: 0.5em;
+            --code-line: 1.5;
+        }
+
+        /* Variante "reel": marco fijo con barra de navegación de pasos.
+           El .r-stack interno sigue siendo grid (los 4 bloques viven en la
+           misma celda), pero con alto definido para que el código scrollee
+           dentro del marco en vez de recortarse. */
+        .reveal .code-reel {
+            --code-fs: 0.48em;
+            --code-line: 1.45;
+            --code-max: 650px;
+            height: 650px;
+        }
+
+        .reveal .code-reel .r-stack {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: grid;
+            grid-template-rows: 100%;
+        }
+
+        .reveal .code-reel .r-stack > * {
+            grid-area: 1 / 1;
+            margin: 0;
+            align-self: stretch;
+            justify-self: stretch;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Barra de navegación de pasos del reel */
+        .code-nav {
+            flex: 0 0 auto;
+            display: flex;
+            gap: 10px;
+            padding: 7px 14px;
+            background: rgba(8, 17, 31, 0.65);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.28);
+        }
+
+        .code-nav-btn {
+            font-family: var(--font-mono);
+            font-size: 0.5em;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--text-muted);
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 8px;
+            padding: 7px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .code-nav-btn:hover {
+            color: var(--cyan);
+            border-color: var(--cyan);
+            background: rgba(56, 189, 248, 0.16);
+        }
+
+        .code-nav-btn.active {
+            color: var(--lime);
+            border-color: var(--lime);
+            background: rgba(204, 255, 0, 0.12);
+            box-shadow: 0 0 12px rgba(204, 255, 0, 0.15);
+        }
+
+        /* Barra superior: separa claramente el "chrome" del editor del código */
+        .code-header {
+            flex: 0 0 auto;
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 11px 18px;
+            background: linear-gradient(180deg, rgba(25, 47, 80, 0.98), rgba(14, 29, 53, 0.96));
+            border-bottom: 1px solid rgba(56, 189, 248, 0.28);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+            font-family: var(--font-mono);
+            font-size: 0.54em;
+            line-height: 1.3;
+            letter-spacing: 0.01em;
+            color: var(--text-muted);
+        }
+
+        .code-header > span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* El nombre del archivo es el que cede espacio; los extremos no */
+        .code-header > span:nth-child(2) {
+            flex: 1 1 auto;
+            color: #CBD5E1;
+        }
+
+        .code-header > span:last-child,
+        .code-header .window-dots {
+            flex: 0 0 auto;
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-dots span {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-r { background: #F43F5E; box-shadow: 0 0 8px rgba(244, 63, 94, 0.55); }
+        .dot-y { background: #FBBF24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.5); }
+        .dot-g { background: #A3E635; box-shadow: 0 0 8px rgba(163, 230, 53, 0.5); }
+
+        /* Área de código: scroller propio, nunca recortada por el contenedor */
+        .reveal pre,
+        .reveal .code-window pre {
+            flex: 1 1 auto;
+            min-height: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            /* Contiene a los clones absolutos de data-line-numbers,
+               que de otro modo se anclan al .code-window y pisan el header */
+            position: relative;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            font-family: var(--font-mono);
+            font-size: var(--code-fs);
+            line-height: var(--code-line);
+            overflow: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(56, 189, 248, 0.5) transparent;
+        }
+
+        /* Neutraliza el auto-wrap y el font-size fijo de Reveal 5 (.hljs) */
+        html:not(.print-pdf) .reveal .code-window pre code.hljs {
+            display: block;
+            min-height: 0;
+            max-height: none;
+            padding: 14px 0 16px 0 !important;
+            /* Opaco: cada paso de resaltado es un bloque superpuesto */
+            background: var(--code-bg) !important;
+            color: #E2E8F0;
+            font-size: 1em;
+            line-height: var(--code-line);
+            white-space: pre;
+            word-wrap: normal;
+            word-break: normal;
+            overflow-wrap: normal;
+            tab-size: 4;
+        }
+
+        /* Gutter de números de línea de Reveal (tabla .hljs-ln) */
+        .reveal .code-window .hljs-ln {
+            border-collapse: collapse;
+            margin: 0;
+            width: auto;
+        }
+
+        .reveal .code-window .hljs-ln td {
+            border: 0;
+            padding: 0;
+            vertical-align: top;
+            font-size: inherit !important;
+            color: inherit !important;
+            background: transparent;
+        }
+
+        .reveal .code-window .hljs-ln-numbers {
+            width: 1%;
+            padding: 0 14px 0 20px !important;
+            color: rgba(148, 163, 184, 0.42) !important;
+            text-align: right;
+            white-space: nowrap;
+            user-select: none;
+            border-right: 1px solid rgba(56, 189, 248, 0.14) !important;
+        }
+
+        .reveal .code-window .hljs-ln-code {
+            padding: 0 22px 0 16px !important;
+            white-space: pre;
+            color: #DCE7F5;
+        }
+
+        /* Paso de resaltado por líneas: lo atenuado debe seguir siendo legible */
+        .reveal .code-window .hljs.has-highlights tr:not(.highlight-line) {
+            opacity: 0.55;
+        }
+
+        .reveal .code-window .hljs .highlight-line td {
+            background: rgba(56, 189, 248, 0.09);
+        }
+
+        /* Paleta de tokens alineada al tema (sobreescribe Monokai) */
+        .reveal .code-window .hljs-comment,
+        .reveal .code-window .hljs-quote {
+            color: #5C7592;
+            font-style: italic;
+        }
+
+        .reveal .code-window .hljs-keyword,
+        .reveal .code-window .hljs-selector-tag,
+        .reveal .code-window .hljs-meta {
+            color: #38BDF8;
+            font-weight: 600;
+        }
+
+        .reveal .code-window .hljs-string,
+        .reveal .code-window .hljs-attr,
+        .reveal .code-window .hljs-regexp {
+            color: #B9E96B;
+        }
+
+        .reveal .code-window .hljs-number,
+        .reveal .code-window .hljs-literal,
+        .reveal .code-window .hljs-symbol {
+            color: #FBBF24;
+        }
+
+        .reveal .code-window .hljs-title,
+        .reveal .code-window .hljs-title.function_ {
+            color: #CCFF00;
+        }
+
+        .reveal .code-window .hljs-type,
+        .reveal .code-window .hljs-class .hljs-title,
+        .reveal .code-window .hljs-built_in {
+            color: #67E8F9;
+        }
+
+        .reveal .code-window .hljs-variable,
+        .reveal .code-window .hljs-params,
+        .reveal .code-window .hljs-property {
+            color: #E2E8F0;
+        }
+
+        /* Scrollbar del bloque de código (WebKit / Chromium) */
+        .reveal .code-window pre::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .reveal .code-window pre::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .reveal .code-window pre::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.4);
+            border-radius: 99px;
+        }
+
+        .reveal .code-window pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.65);
+        }
+
+        /* Bloque SQL Tachado / Atenuado (Slide 2) */
+        .sql-deprecated {
+            position: relative;
+            background: rgba(10, 25, 47, 0.85);
+            border: 1px dashed rgba(244, 63, 94, 0.55);
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin-top: 18px;
+            font-family: var(--font-mono);
+            font-size: 0.72em;
+            color: rgba(148, 163, 184, 0.65);
+        }
+
+        .sql-deprecated code {
+            text-decoration: line-through;
+            text-decoration-color: var(--coral);
+            text-decoration-thickness: 2px;
+        }
+
+        .sql-badge-error {
+            position: absolute;
+            top: -13px;
+            right: 16px;
+            background: var(--coral);
+            color: #fff;
+            font-family: var(--font-title);
+            font-size: 0.68em;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 99px;
+            letter-spacing: 0.06em;
+        }
+
+        /* Diagrama Entidad-Relación (Slide 3) */
+        .er-wrapper {
+            position: relative;
+            width: 100%;
+            height: 580px;
+            margin-top: 25px;
+        }
+
+        .er-svg-connectors {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .er-tables-layer {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 90px;
+            height: 100%;
+            align-items: center;
+        }
+
+        .db-table-card {
+            background: rgba(13, 28, 52, 0.92);
+            border: 1.5px solid var(--cyan);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .db-table-card.table-nodes { border-color: var(--cyan); }
+        .db-table-card.table-history { border-color: var(--lime); }
+        .db-table-card.table-relations { border-color: var(--coral); }
+
+        .db-header {
+            padding: 14px 20px;
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table-nodes .db-header { background: rgba(56, 189, 248, 0.16); color: var(--cyan); }
+        .table-history .db-header { background: rgba(204, 255, 0, 0.15); color: var(--lime); }
+        .table-relations .db-header { background: rgba(244, 63, 94, 0.16); color: var(--coral); }
+
+        .db-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            font-family: var(--font-mono);
+            font-size: 0.68em;
+        }
+
+        .db-row:last-child { border-bottom: none; }
+        .pk-badge { color: var(--lime); font-weight: 700; margin-right: 8px; }
+        .fk-badge { color: var(--cyan); font-weight: 700; margin-right: 8px; }
+        .col-type { color: var(--text-muted); font-size: 0.88em; }
+
+        /* Animaciones SVG (Dashoffset & Pulse) */
+        @keyframes dashFlow {
+            to { stroke-dashoffset: -40; }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { r: 58px; opacity: 0.45; }
+            50% { r: 74px; opacity: 0.08; }
+        }
+
+        @keyframes drawLine {
+            from { stroke-dashoffset: 400; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        .animated-dash {
+            stroke-dasharray: 10 8;
+            animation: dashFlow 1.6s linear infinite;
+        }
+
+        .pulse-circle {
+            animation: pulseGlow 2.4s ease-in-out infinite;
+        }
+
+        /* Pipeline Horizontal (Slide 5) */
+        .pipeline-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0 30px 0;
+        }
+
+        .pipe-step {
+            background: rgba(17, 34, 64, 0.85);
+            border: 1.5px solid rgba(56, 189, 248, 0.35);
+            border-radius: 12px;
+            padding: 18px 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .pipe-step .step-num {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 50%;
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--cyan);
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 0.72em;
+            margin-bottom: 8px;
+        }
+
+        .pipe-step.step-prune { border-color: var(--coral); }
+        .pipe-step.step-prune .step-num { background: rgba(244, 63, 94, 0.2); color: var(--coral); }
+
+        .pipe-step.step-bst { border-color: var(--lime); }
+        .pipe-step.step-bst .step-num { background: rgba(204, 255, 0, 0.2); color: var(--lime); }
+
+        .pipe-title {
+            font-family: var(--font-title);
+            font-size: 0.76em;
+            font-weight: 800;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .pipe-desc {
+            font-size: 0.6em;
+            color: var(--text-muted);
+        }
+
+        /* Fórmula Matemática y Timeout (Slide 6) */
+        .formula-showcase {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 22px 0;
+        }
+
+        .math-box {
+            flex: 1;
+            background: rgba(10, 25, 47, 0.9);
+            border: 1.5px solid var(--cyan);
+            border-radius: 12px;
+            padding: 18px 14px;
+            text-align: center;
+        }
+
+        .math-box.result {
+            border-color: var(--lime);
+            background: rgba(204, 255, 0, 0.08);
+            box-shadow: 0 0 25px rgba(204, 255, 0, 0.15);
+        }
+
+        .math-number {
+            font-family: var(--font-title);
+            font-size: 2.1em;
+            font-weight: 900;
+            color: var(--cyan);
+            line-height: 1;
+        }
+
+        .math-box.result .math-number {
+            color: var(--lime);
+        }
+
+        .math-label {
+            font-size: 0.62em;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .math-op {
+            font-family: var(--font-title);
+            font-size: 1.8em;
+            font-weight: 900;
+            color: var(--text-muted);
+        }
+
+        .timeout-bar-wrap {
+            background: rgba(10, 25, 47, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-top: 20px;
+        }
+
+        .timeout-track {
+            width: 100%;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        @keyframes progressSweep {
+            0% { width: 15%; background: var(--lime); }
+            70% { width: 85%; background: var(--cyan); }
+            100% { width: 100%; background: var(--coral); }
+        }
+
+        .timeout-fill {
+            height: 100%;
+            border-radius: 99px;
+            animation: progressSweep 6s ease-in-out infinite alternate;
+        }
+
+        /* Tarjetas de Conclusión (Slide 7) */
+        .conclusion-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 34px 30px;
+            border-top: 4px solid var(--cyan);
+        }
+
+        .conclusion-card.card-2 { border-top-color: var(--coral); }
+        .conclusion-card.card-3 { border-top-color: var(--lime); }
+
+        .icon-circle {
+            width: 68px;
+            height: 68px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+
+        .card-2 .icon-circle {
+            background: rgba(244, 63, 94, 0.12);
+            border-color: rgba(244, 63, 94, 0.35);
+        }
+
+        .card-3 .icon-circle {
+            background: rgba(204, 255, 0, 0.12);
+            border-color: rgba(204, 255, 0, 0.35);
+        }
+
+        /* Footer Fijo Institucional */
+        .deck-footer {
+            position: fixed;
+            bottom: 22px;
+            left: 60px;
+            right: 120px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            color: rgba(148, 163, 184, 0.55);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .deck-footer b {
+            color: var(--lime);
+        }
+
+        /* Controles de Reveal personalizados */
+        .reveal .controls {
+            color: var(--lime);
+        }
+        .reveal .progress {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--lime);
+            height: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Textura SVG Global de Cancha de Pádel (Opacity 0.04) -->
+    <svg class="padel-court-bg" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+        <rect x="140" y="90" width="1640" height="900" fill="none" stroke="#FFFFFF" stroke-width="6"/>
+        <!-- Red central -->
+        <line x1="960" y1="60" x2="960" y2="1020" stroke="#FFFFFF" stroke-width="8" stroke-dasharray="18 10"/>
+        <!-- Líneas de saque -->
+        <line x1="420" y1="90" x2="420" y2="990" stroke="#FFFFFF" stroke-width="5"/>
+        <line x1="1500" y1="90" x2="1500" y2="990" stroke="#FFFFFF" stroke-width="5"/>
+        <!-- Línea central de saque -->
+        <line x1="420" y1="540" x2="1500" y2="540" stroke="#FFFFFF" stroke-width="5"/>
+    </svg>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- ==========================================
+                 DIAPOSITIVA 1: PORTADA
+                 ========================================== -->
+            <section data-auto-animate>
+                <div class="hero-container">
+                    <!-- Marco Geométrico Minimalista de Cancha en SVG -->
+                    <svg class="hero-court-frame" viewBox="0 0 1800 900">
+                        <defs>
+                            <linearGradient id="courtGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#CCFF00" stop-opacity="0.35"/>
+                                <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.25"/>
+                                <stop offset="100%" stop-color="#CCFF00" stop-opacity="0.35"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="20" y="20" width="1760" height="860" rx="28" fill="none" stroke="url(#courtGrad)" stroke-width="2.5"/>
+                        <line x1="20" y1="180" x2="140" y2="180" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.3"/>
+                        <line x1="1660" y1="180" x2="1780" y2="180" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.3"/>
+                        <circle cx="900" cy="20" r="6" fill="#CCFF00"/>
+                        <circle cx="900" cy="880" r="6" fill="#38BDF8"/>
+                    </svg>
+
+                    <div class="hero-content">
+                        <div class="sport-badge">
+                            <span class="dot"></span>
+                            ALQUIPADEL — MOTOR ALGORÍTMICO
+                        </div>
+
+                        <h1>Sistema de Recomendación<br>para Partidos Abiertos</h1>
+
+                        <p style="font-size: 1.15em; color: var(--text-muted); max-width: 980px; margin: 18px auto 0;">
+                            Motor de recomendación basado en afinidad social, grafos ponderados y estructuras de datos
+                            
+                        </p>
+
+                        <div class="meta-grid">
+                            <div class="meta-box highlight">
+                                <div class="meta-label">Grupo de Desarrollo</div>
+                                <div class="meta-value" style="color: var(--lime); font-size: 1.2em;">Agustín²</div>
+                                <div class="meta-value" style="font-size: 0.8em;">- Agustín Ramirez</div>
+                                <div class="meta-value" style="font-size: 0.8em;">- Agustín Diaz</div>
+
+
+                            </div>
+                            <div class="meta-box">
+                                <div class="meta-label">Asignatura</div>
+                                <div class="meta-value">Algoritmos y Estructuras de Datos III</div>
+                            </div>
+                            <div class="meta-box">
+                                <div class="meta-label">Institución Académica</div>
+                                <div class="meta-value">Instituto del Profesorado Francisco de Paula Robles</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 DIAPOSITIVA 2: EL PROBLEMA DE NEGOCIO
+                 ========================================== -->
+            <section data-auto-animate>
+                <h2><span class="accent-bar"></span>El Problema de Negocio: El "Falta Uno"</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;">
+                    La dificultad de completar parridos abiertos mediante publicaciones generales y búsquedas tradicionales.
+                </p>
+
+                <div class="grid-2">
+                    <!-- Columna Izquierda: Problema Operativo y Límite de SQL -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <div class="glass-card coral-glow fragment fade-up" data-fragment-index="1">
+                            <span class="tag-pill tag-coral">Problemática Operativa Actual</span>
+                            <h3 style="margin-top: 14px; font-size: 1.2em; color: #FFF;">La Grilla Abierta Indiscriminada</h3>
+                            <p style="font-size: 0.84em; margin-bottom: 12px;">
+                                En deportes de equipo, la principal barrera es completar el turno a último momento. Publicar el partido abierto en una grilla general expone el encuentro a <strong>desajustes críticos</strong>:
+                            </p>
+                            <ul style="font-size: 0.8em; color: #CBD5E1; margin-left: 20px;">
+                                <li>Inscripción de jugadores de <strong>distinta categoría o género</strong>.</li>
+                                <li>Usuarios de <strong>otra localidad</strong> o con <strong>bloqueos previos</strong> (conflictos).</li>
+                                <li>Spam masivo de notificaciones a toda la base de usuarios.</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card fragment fade-up" data-fragment-index="2">
+                            <span class="tag-pill tag-cyan">¿Por qué no alcanza una consulta SQL?</span>
+                            <p style="font-size: 0.82em; margin-top: 12px;">
+                                Una consulta tradicional evalúa <strong>datos estáticos fríos</strong>, pero desconoce la topología social: no sabe con quién prefiere jugar el organizador ni pondera su historial real en cancha.
+                            </p>
+                            <div class="sql-deprecated">
+                                <span class="sql-badge-error">ENFOQUE DESCARTADO</span>
+                                <code>SELECT * FROM jugadores WHERE localidad = 'Pila' AND genero = 'M';</code>
+                                <div style="font-size: 0.82em; color: var(--coral); margin-top: 8px; text-decoration: none;">
+                                    ✕ Ignora vínculos de 2° grado, afinidad histórica y rechazos.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Nuestro Objetivo -->
+                    <div class="glass-card lime-glow fragment fade-up" data-fragment-index="3" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div class="sport-badge" style="margin-bottom: 16px;">
+                                <span class="dot"></span>
+                                NUESTRO OBJETIVO: MOTOR EN MEMORIA
+                            </div>
+                            <h3 style="font-size: 1.45em; color: var(--lime); margin-bottom: 16px;">
+                                Recomendación Inteligente Basada en Grafos
+                            </h3>
+                            <p style="font-size: 0.88em; color: #E2E8F0;">
+                                Construir un motor dinámico en memoria RAM que explore la red real de jugadores a partir del creador del partido, garantizando precisión deportiva y cero spam.
+                            </p>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px;">
+                                <div style="background: rgba(10, 25, 47, 0.7); padding: 16px; border-radius: 10px; border-left: 4px solid var(--lime);">
+                                    <div style="font-weight: 800; color: var(--lime); font-size: 0.85em;">1. Afinidad Social</div>
+                                    <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 4px;">Priorizar jugadores que tienen relaciones previas con el organizador de su entorno.</div>
+                                </div>
+                                <div style="background: rgba(10, 25, 47, 0.7); padding: 16px; border-radius: 10px; border-left: 4px solid var(--coral);">
+                                    <div style="font-weight: 800; color: var(--coral); font-size: 0.85em;">2. Muros Estrictos</div>
+                                    <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 4px;">Corte inmediato por Género, Localidad y estado "No Deseado".</div>
+                                </div>
+                                <div style="background: rgba(10, 25, 47, 0.7); padding: 16px; border-radius: 10px; border-left: 4px solid var(--cyan);">
+                                    <div style="font-weight: 800; color: var(--cyan); font-size: 0.85em;">3. Cercanía Social</div>
+                                    <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 4px;">Recorrido por niveles (Contactos directos ➔ Amigos de amigos).</div>
+                                </div>
+                                <div style="background: rgba(10, 25, 47, 0.7); padding: 16px; border-radius: 10px; border-left: 4px solid #FFF;">
+                                    <div style="font-weight: 800; color: #FFF; font-size: 0.85em;">4. Envios Dosificados</div>
+                                    <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 4px;">Limitar la cantidad de invitaciones para evitar notificaciones masivas..</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(204, 255, 0, 0.25); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.72em;">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 DIAPOSITIVA 3: ESQUEMA RELACIONAL DE DATOS
+                 ========================================== -->
+            <section data-auto-animate>
+                <h2><span class="accent-bar"></span>Esquema Relacional de Datos (Persistencia SQL)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 10px;">
+                    La <strong>Bases de Datos</strong> almacena los jugadores, el historial deportivo y las relaciones que permiten construir el grafo.
+                </p>
+
+                <div class="er-wrapper">
+                    <!-- Líneas Conectoras Animadas entre Foreign Keys -->
+                    <svg class="er-svg-connectors" viewBox="0 0 1800 580">
+                        <!-- Conectores Tabla 1 (id_jugador) -> Tabla 2 (id_jugador_a, id_jugador_b) -->
+                        <path d="M 520 215 C 600 215, 600 215, 675 215" fill="none" stroke="#CCFF00" stroke-width="3" class="animated-dash"/>
+                        <path d="M 520 215 C 595 215, 595 265, 675 265" fill="none" stroke="#CCFF00" stroke-width="3" class="animated-dash"/>
+                        <circle cx="520" cy="215" r="6" fill="#38BDF8"/>
+                        <circle cx="675" cy="215" r="6" fill="#CCFF00"/>
+                        <circle cx="675" cy="265" r="6" fill="#CCFF00"/>
+
+                        <!-- Conector Curvo Superior Tabla 1 (id_jugador) -> Tabla 3 (id_origen, id_destino) -->
+                        <path d="M 520 195 C 720 40, 1080 40, 1280 215" fill="none" stroke="#F43F5E" stroke-width="2.5" class="animated-dash"/>
+                        <path d="M 520 195 C 720 65, 1080 65, 1280 265" fill="none" stroke="#F43F5E" stroke-width="2.5" class="animated-dash"/>
+                        <circle cx="1280" cy="215" r="6" fill="#F43F5E"/>
+                        <circle cx="1280" cy="265" r="6" fill="#F43F5E"/>
+
+                        <!-- Etiquetas de Relación sobre conectores -->
+                        <rect x="550" y="165" width="95" height="28" rx="6" fill="#0A192F" stroke="#CCFF00" stroke-width="1.5"/>
+                        <text x="597" y="184" text-anchor="middle" fill="#CCFF00" font-family="Fira Code" font-size="13" font-weight="600">1 : N (FK)</text>
+
+                        <rect x="835" y="42" width="140" height="28" rx="6" fill="#0A192F" stroke="#F43F5E" stroke-width="1.5"/>
+                        <text x="905" y="61" text-anchor="middle" fill="#F43F5E" font-family="Fira Code" font-size="13" font-weight="600">FK Origen/Dest</text>
+                    </svg>
+
+                    <div class="er-tables-layer">
+                        <!-- Tabla 1: Jugadores -->
+                        <div class="db-table-card table-nodes fragment fade-up" data-fragment-index="1">
+                            <div class="db-header">
+                                <span>1. Jugadores</span>
+                                <span class="tag-pill tag-cyan">NODOS</span>
+                            </div>
+                            <div class="db-row">
+                                <span><span class="pk-badge">PK</span>id_jugador</span>
+                                <span class="col-type">INT</span>
+                            </div>
+                            <div class="db-row">
+                                <span>nombre</span>
+                                <span class="col-type">VARCHAR(80)</span>
+                            </div>
+                            <div class="db-row">
+                                <span>genero</span>
+                                <span class="col-type">CHAR(1)</span>
+                            </div>
+                            <div class="db-row">
+                                <span>localidad</span>
+                                <span class="col-type">VARCHAR(60)</span>
+                            </div>
+                            <div style="padding: 14px 20px; background: rgba(10, 25, 47, 0.75); font-size: 0.68em; color: var(--text-muted);">
+                                Almacena los atributos estáticos requeridos para evaluar los <strong style="color: var(--cyan);">filtros estrictos</strong>.
+                            </div>
+                        </div>
+
+                        <!-- Tabla 2: Partidos_Históricos -->
+                        <div class="db-table-card table-history fragment fade-up" data-fragment-index="2">
+                            <div class="db-header">
+                                <span>2. Partidos_Históricos</span>
+                                <span class="tag-pill tag-lime">PESO BASE</span>
+                            </div>
+                            <div class="db-row">
+                                <span><span class="fk-badge">FK</span>id_jugador_a</span>
+                                <span class="col-type">INT</span>
+                            </div>
+                            <div class="db-row">
+                                <span><span class="fk-badge">FK</span>id_jugador_b</span>
+                                <span class="col-type">INT</span>
+                            </div>
+                            <div class="db-row">
+                                <span style="color: var(--lime); font-weight: 600;">cantidad_partidos</span>
+                                <span class="col-type">INT (+1 auto)</span>
+                            </div>
+                            <div style="padding: 14px 20px; background: rgba(10, 25, 47, 0.75); font-size: 0.68em; color: var(--text-muted);">
+                                Crecimiento <strong style="color: var(--lime);">orgánico y pasivo</strong>. Registra cuántas veces compartieron cancha dos jugadores.
+                            </div>
+                        </div>
+
+                        <!-- Tabla 3: Relaciones -->
+                        <div class="db-table-card table-relations fragment fade-up" data-fragment-index="3">
+                            <div class="db-header">
+                                <span>3. Relaciones</span>
+                                <span class="tag-pill tag-coral">BONO / PODA</span>
+                            </div>
+                            <div class="db-row">
+                                <span><span class="fk-badge">FK</span>id_origen</span>
+                                <span class="col-type">INT</span>
+                            </div>
+                            <div class="db-row">
+                                <span><span class="fk-badge">FK</span>id_destino</span>
+                                <span class="col-type">INT</span>
+                            </div>
+                            <div class="db-row">
+                                <span style="color: var(--coral); font-weight: 600;">estado</span>
+                                <span class="col-type">TINYINT (1 | 2)</span>
+                            </div>
+                            <div style="padding: 14px 20px; background: rgba(10, 25, 47, 0.75); font-size: 0.68em; color: var(--text-muted);">
+                                Acción manual: <strong style="color: var(--lime);">1 = Favorito (+50 pts)</strong> | <strong style="color: var(--coral);">2 = No Deseado (Cortocircuito)</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 DIAPOSITIVA 4: EXPANSIÓN DEL GRAFO (BFS) Y FILTROS (ESTRELLA)
+                 ========================================== -->
+            <section data-auto-animate>
+                <h2><span class="accent-bar"></span>Expansión del Grafo (BFS) y Filtros en Memoria</h2>
+
+                <div class="grid-60-40" style="margin-top: 10px;">
+                    <!-- Izquierda (60%): Grafo Visual SVG Hecho a Medida -->
+                    <div class="glass-card" style="padding: 18px; border-color: rgba(56, 189, 248, 0.35);">
+                        <svg viewBox="0 0 1050 640" style="width: 100%; height: auto; display: block;">
+                            <defs>
+                                <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                                </filter>
+                                <filter id="glowLime" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="5" result="blur"/>
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                                </filter>
+                            </defs>
+
+                            <!-- NODO RAÍZ (Siempre visible) -->
+                            <g id="svg-root">
+                                <circle cx="145" cy="320" r="70" fill="#38BDF8" class="pulse-circle"/>
+                                <circle cx="145" cy="320" r="70" fill="#0A192F" stroke="#38BDF8" stroke-width="5" filter="url(#glowCyan)"/>
+                                <text x="145" y="312" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat" font-weight="800" font-size="22">Agustín</text>
+                                <text x="145" y="340" text-anchor="middle" fill="#38BDF8" font-family="Fira Code" font-weight="600" font-size="14">6ta · Masc</text>
+                                <rect x="80" y="398" width="170" height="24" rx="12" fill="rgba(56, 189, 248, 0.2)" stroke="#38BDF8" stroke-width="1"/>
+                                <text x="165" y="415" text-anchor="middle" fill="#38BDF8" font-family="Montserrat" font-weight="700" font-size="12">NODO RAÍZ (CREADOR)</text>
+                            </g>
+
+                            <!-- FRAGMENTO 1: NIVEL 1 (Contactos Directos: Mateo Válido y Carolina Podada) -->
+                            <g class="fragment" data-fragment-index="1">
+                                <!-- Etiqueta Superior Nivel 1 -->
+                                <rect x="365" y="22" width="255" height="32" rx="8" fill="rgba(17, 34, 64, 0.9)" stroke="#38BDF8" stroke-width="1.5"/>
+                                <text x="490" y="43" text-anchor="middle" fill="#38BDF8" font-family="Montserrat" font-weight="800" font-size="14">NIVEL 1 · CONTACTOS DIRECTOS</text>
+
+                                <!-- Arista Raíz -> Mateo (Válida) -->
+                                <line x1="207" y1="290" x2="420" y2="180" stroke="#CCFF00" stroke-width="4" class="animated-dash"/>
+                                <rect x="240" y="198" width="138" height="26" rx="6" fill="#0A192F" stroke="#CCFF00" stroke-width="1.5"/>
+                                <text x="309" y="216" text-anchor="middle" fill="#CCFF00" font-family="Fira Code" font-weight="600" font-size="13">Peso: 55 pts</text>
+
+                                <!-- Nodo Mateo (Verde Lima #CCFF00 + Check ✓) -->
+                                <circle cx="485" cy="165" r="70" fill="#0A192F" stroke="#CCFF00" stroke-width="5" filter="url(#glowLime)"/>
+                                <text x="485" y="158" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat" font-weight="800" font-size="22">Mateo</text>
+                                <text x="485" y="185" text-anchor="middle" fill="#CCFF00" font-family="Fira Code" font-size="13">6ta · Pila (M)</text>
+                                <!-- Check Badge -->
+                                <circle cx="537" cy="112" r="16" fill="#CCFF00"/>
+                                <text x="537" y="118" text-anchor="middle" fill="#0A192F" font-family="Montserrat" font-weight="900" font-size="18">✓</text>
+                                <text x="485" y="260" text-anchor="middle" fill="#CCFF00" font-family="Fira Code" font-weight="600" font-size="13">➔ Entra al Árbol BST</text>
+
+                                <!-- Arista Raíz -> Muro Carolina (Bloqueada) -->
+                                <line x1="207" y1="350" x2="388" y2="465" stroke="#F43F5E" stroke-width="3.5" stroke-dasharray="8 6"/>
+
+                                <!-- MURO ROJO VERTICAL DE PODA -->
+                                <line x1="395" y1="395" x2="395" y2="540" stroke="#F43F5E" stroke-width="7" stroke-linecap="round"/>
+                                <rect x="310" y="362" width="170" height="24" rx="5" fill="#F43F5E"/>
+                                <text x="395" y="379" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat" font-weight="800" font-size="12">MURO · FILTRO GÉNERO</text>
+
+                                <!-- Nodo Carolina (Rojo Coral #F43F5E + X) -->
+                                <g opacity="0.78">
+                                    <circle cx="495" cy="480" r="70" fill="#1A1025" stroke="#F43F5E" stroke-width="4"/>
+                                    <text x="495" y="473" text-anchor="middle" fill="#F8FAFC" font-family="Montserrat" font-weight="700" font-size="21" text-decoration="line-through">Carolina</text>
+                                    <text x="495" y="500" text-anchor="middle" fill="#F43F5E" font-family="Fira Code" font-size="13">Femenino</text>
+                                    <!-- X Badge -->
+                                    <circle cx="547" cy="428" r="16" fill="#F43F5E"/>
+                                    <text x="547" y="434" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat" font-weight="900" font-size="16">✕</text>
+                                    <text x="495" y="570" text-anchor="middle" fill="#F43F5E" font-family="Fira Code" font-weight="600" font-size="13">(Cortocircuito)</text>
+                                </g>
+                            </g>
+
+                            <!-- FRAGMENTO 2: LÍNEA DIVISORIA (FRONTERA DE BÚSQUEDA) -->
+                            <g class="fragment" data-fragment-index="2">
+                                <line x1="655" y1="25" x2="655" y2="615" stroke="#38BDF8" stroke-width="3" class="animated-dash"/>
+                                <rect x="555" y="295" width="200" height="46" rx="8" fill="#0A192F" stroke="#38BDF8" stroke-width="2"/>
+                                <text x="655" y="315" text-anchor="middle" fill="#38BDF8" font-family="Montserrat" font-weight="1000" font-size="12">FRONTERA DE BÚSQUEDA</text>
+                                <text x="655" y="332" text-anchor="middle" fill="#94A3B8" font-family="Fira Code" font-size="11">Solo si faltan cupos</text>
+                            </g>
+
+                            <!-- FRAGMENTO 3: NIVEL 2 (Contactos Secundarios: Lucas) -->
+                            <g class="fragment" data-fragment-index="3">
+                                <!-- Etiqueta Superior Nivel 2 -->
+                                <rect x="740" y="22" width="290" height="32" rx="8" fill="rgba(17, 34, 64, 0.9)" stroke="rgba(56, 189, 248, 0.55)" stroke-width="1.5"/>
+                                <text x="887" y="43" text-anchor="middle" fill="#94A3B8" font-family="Montserrat" font-weight="800" font-size="14">NIVEL 2 · CONTACTOS SECUNDARIOS</text>
+
+                                <!-- Arista Mateo -> Lucas -->
+                                <line x1="547" y1="165" x2="825" y2="165" stroke="rgba(56, 189, 248, 0.75)" stroke-width="3.5" class="animated-dash"/>
+
+                                <!-- Nodo Lucas (Cian tenue) -->
+                                <circle cx="885" cy="165" r="70" fill="#0A192F" stroke="rgba(56, 189, 248, 0.85)" stroke-width="4"/>
+                                <text x="885" y="156" text-anchor="middle" fill="#FFFFFF" font-family="Montserrat" font-weight="800" font-size="22">Lucas</text>
+                                <text x="885" y="183" text-anchor="middle" fill="#38BDF8" font-family="Fira Code" font-size="12">Amigo de Mateo</text>
+
+                                
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- Derecha (40%): Explicación Paso a Paso con Fragmentos -->
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div class="glass-card" style="padding: 18px 22px; border-left: 4px solid var(--cyan);">
+                            <div style="font-family: var(--font-title); font-weight: 800; color: var(--cyan); font-size: 0.85em;">
+                                NODO RAÍZ: AGUSTÍN (6ta - Masc)
+                            </div>
+                            <p style="font-size: 0.74em; margin: 6px 0 0 0;">
+                                El creador del partido es el punto inicial de la búsqueda.
+                            </p>
+                        </div>
+
+                        <div class="glass-card fragment fade-up" data-fragment-index="1" style="padding: 18px 22px; border-left: 4px solid var(--lime);">
+                            <div style="font-family: var(--font-title); font-weight: 800; color: var(--lime); font-size: 0.85em;">
+                                1. NIVEL 1: Contactos directos
+                            </div>
+                             <p style="font-size: 0.74em; margin: 6px 0 0 0;">
+                                Se evalúan los contactos del creador. Los jugadores que cumplen los filtros ingresan al conjunto de candidatos; los incompatibles se descartan.
+                            </p>
+                            <p style="font-size: 0.74em; margin: 6px 0 0 0;">
+                                • <strong style="color: var(--lime);">Mateo:</strong> Cumple localidad y género ➔ Se pondera e ingresa al Árbol Binario.<br>
+                                • <strong style="color: var(--coral);">Carolina:</strong> Choca contra el <strong>Muro de Género</strong>. Se descarta sin instanciar ni expandir sus amigos.
+                            </p>
+                        </div>
+
+                        <div class="glass-card fragment fade-up" data-fragment-index="2" style="padding: 18px 22px; border-left: 4px solid #FFF;">
+                            <div style="font-family: var(--font-title); font-weight: 800; color: #FFF; font-size: 0.85em;">
+                                2. LA FRONTERA DE BÚSQUEDA
+                            </div>
+                            <p style="font-size: 0.74em; margin: 6px 0 0 0;">
+                                El algoritmo <strong>solo cruza la línea divisoria hacia el Nivel 2</strong> si los candidatos válidos del Nivel 1 no alcanzan para cubrir la demanda (Regla x3).
+                            </p>
+                        </div>
+
+                        <div class="glass-card fragment fade-up" data-fragment-index="3" style="padding: 18px 22px; border-left: 4px solid var(--cyan);">
+                            <div style="font-family: var(--font-title); font-weight: 800; color: var(--cyan); font-size: 0.85em;">
+                                3. NIVEL 2: CONTACTOS SECUNDARIOS
+                            </div>
+                            <p style="font-size: 0.74em; margin: 6px 0 0 0;">
+                                Evalúa a <strong>Lucas (Amigo de Mateo)</strong> manteniendo los mismos muros estrictos
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 DIAPOSITIVA 5: ARQUITECTURA DE EJECUCIÓN (4 BLOQUES EN 1)
+                 ========================================== -->
+            <section>
+                <h2><span class="accent-bar"></span>Arquitectura de Ejecución: Del Disco a la RAM</h2>
+                <p style="color: var(--text-muted); margin-bottom: 12px;">
+Transformación de los datos persistentes en estructuras de datos que permiten realizar la búsqueda y priorización.</p>
+
+                <!-- Pipeline Fijo Superior (Indicador Visual) -->
+                <div class="pipeline-container" style="margin-bottom: 12px;">
+                    <div class="pipe-step">
+                        <span class="step-num">1</span>
+                        <div class="pipe-title">Estructuras base</div>
+                        <div class="pipe-desc">Clases Jugador y Arista.</div>
+                    </div>
+                    <svg width="30" height="30" viewBox="0 0 48 30"><polygon points="36,8 46,15 36,22" fill="#38BDF8"/></svg>
+                    <div class="pipe-step">
+                        <span class="step-num">2</span>
+                        <div class="pipe-title">Carga SQL</div>
+                        <div class="pipe-desc">Importación del catálogo de jugadores y sus conexiones.</div>
+                    </div>
+                    <svg width="30" height="30" viewBox="0 0 48 30"><polygon points="36,8 46,15 36,22" fill="#38BDF8"/></svg>
+                    <div class="pipe-step step-prune">
+                        <span class="step-num">3</span>
+                        <div class="pipe-title">Grafo + BFS</div>
+                        <div class="pipe-desc">Exploración, filtros y cálculo de afinidad.</div>
+                    </div>
+                    <svg width="30" height="30" viewBox="0 0 48 30"><polygon points="36,8 46,15 36,22" fill="#38BDF8"/></svg>
+                    <div class="pipe-step step-bst">
+                        <span class="step-num">4</span>
+                        <div class="pipe-title">Árbol BST</div>
+                        <div class="pipe-desc">Organización de candidatos según su puntuación.</div>
+                    </div>
+                </div>
+
+                <!-- Contenedor Dinámico: marco fijo con barra de pasos + código scrolleable -->
+                <div class="code-window code-reel" id="codeReel">
+                    <div class="code-nav">
+                        <button class="code-nav-btn active" data-f="-1" tabindex="-1">1 · Estructuras base</button>
+                        <button class="code-nav-btn" data-f="0" tabindex="-1">2 · Carga SQL</button>
+                        <button class="code-nav-btn" data-f="1" tabindex="-1">3 · Grafo + BFS</button>
+                        <button class="code-nav-btn" data-f="2" tabindex="-1">4 · Árbol BST</button>
+                    </div>
+                    <div class="r-stack">
+
+                    <!-- BLOQUE 1: TDA (Visible por defecto) -->
+                    <div class="fragment fade-out" data-fragment-index="1" style="width: 100%;">
+                        <div class="code-header">
+                            <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                            <span>EstructurasBase.java — Tipos de Datos Abstractos (Nodos y Aristas)</span>
+                            <span style="color: var(--cyan);">Paso 1 de 4</span>
+                        </div>
+                        <pre><code class="language-java" data-trim data-line-numbers>
+// 1. TDA Nodo (El diccionario estático para los filtros)
+class Jugador {
+    int id;
+    String nombre; 
+    String localidad;
+    String genero;
+
+    public Jugador(int id, String nombre, String localidad, String genero) {
+        this.id = id; 
+        this.nombre = nombre; 
+        this.localidad = localidad; 
+        this.genero = genero;
+
+    }
+}
+
+// 2. TDA Conexión (La relación dinámica en la Lista de Adyacencia)
+class Arista {
+    int destino;
+    int peso;
+    int estado; // 0=Neutral, 1=Favorito, 2=No Deseado
+
+    public Arista(int destino, int peso, int estado) {
+        this.destino = destino; 
+        this.peso = peso; 
+        this.estado = estado;
+    }
+}
+                        </code></pre>
+                    </div>
+
+                    <!-- BLOQUE 2: SQL y CARGA -->
+                    <div class="fragment current-visible" data-fragment-index="1" style="width: 100%;">
+                        <div class="code-header">
+                            <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                            <span>CargadorGrafo.java — Extracción desde Base de Datos</span>
+                            <span style="color: var(--cyan);">Paso 2 de 4</span>
+                        </div>
+                        <pre><code class="language-java" data-trim data-line-numbers>
+// CargadorGrafo.java
+
+public class CargadorGrafo {
+
+    /**
+     * Propósito: pasar los datos de SQL a la RAM.
+     * Precondición: db abierta y grafo vacío.
+     * Poscondición: el grafo contiene todos los jugadores y sus conexiones.
+     */
+    public static void cargar(Connection db, GrafoAlquiPadel grafo) throws SQLException {
+
+        // PASO 1: nodos -> catálogo
+        PreparedStatement psNodos = db.prepareStatement(
+            "SELECT id_jugador, nombre, genero, localidad FROM Jugadores");
+        ResultSet rsNodos = psNodos.executeQuery();
+
+        while (rsNodos.next()) {
+            grafo.agregarJugador(new Jugador(
+                rsNodos.getInt("id_jugador"),
+                rsNodos.getString("nombre"),
+                rsNodos.getString("localidad"),
+                rsNodos.getString("genero")));
+        }
+
+        // PASO 2: historial + relaciones -> aristas con peso
+        PreparedStatement psAristas = db.prepareStatement(
+            "SELECT ph.id_jugador_a, ph.id_jugador_b, ph.cantidad_partidos, r.estado " +
+            "FROM Partidos_Historicos ph " +
+            "LEFT JOIN Relaciones r " +
+            "ON ph.id_jugador_a = r.id_origen AND ph.id_jugador_b = r.id_destino");
+        ResultSet rsAristas = psAristas.executeQuery();
+
+        while (rsAristas.next()) {
+            int estado = rsAristas.getInt("estado");   // NULL en SQL -> getInt devuelve 0 (Neutral)
+
+            int peso = rsAristas.getInt("cantidad_partidos") + (estado == 1 ? 50 : 0);
+
+            grafo.agregarConexion(rsAristas.getInt("id_jugador_a"),
+                                  rsAristas.getInt("id_jugador_b"), peso, estado);
+        }
+    }
+}
+                        </code></pre>
+                    </div>
+
+                    <!-- BLOQUE 3: GRAFO BFS y PODA -->
+                    <div class="fragment current-visible" data-fragment-index="2" style="width: 100%;">
+                        <div class="code-header">
+                            <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                            <span>GrafoAlquiPadel.java — Motor de Búsqueda y Filtrado</span>
+                            <span style="color: var(--coral);">Paso 3 de 4</span>
+                        </div>
+                        <pre><code class="language-java" data-trim data-line-numbers>
+// GrafoAlquiPadel.java - Motor de Exploración BFS y Poda
+
+public class GrafoAlquiPadel {
+    Map&lt;Integer, Jugador&gt; catalogo = new HashMap&lt;&gt;();        
+    Map&lt;Integer, List&lt;Arista&gt;&gt; adyacencia = new HashMap&lt;&gt;();
+
+    public void agregarJugador(Jugador j) {
+        catalogo.put(j.id, j);
+        adyacencia.put(j.id, new ArrayList<>());
+}
+    public void agregarConexion(int a, int b, int peso, int estado) {
+        adyacencia.get(a).add(new Arista(b, peso, estado));
+        adyacencia.get(b).add(new Arista(a, peso, estado)); // Grafo No Dirigido
+    }
+
+    public void buscarCandidatosBFS(
+    int idCreador,
+    String locPartido,
+    String genReq,
+    int nivelMax,
+    int limiteCandidatos,
+    ArbolBST arbol) {
+
+    Map<Integer, Integer> niveles = new HashMap<>();
+    Cola<Integer> cola = new Cola<>();
+
+    niveles.put(idCreador, 0);
+    cola.encolar(idCreador);
+
+    int candidatosNivel1 = 0;
+
+    while (!cola.estaVacia()) {
+
+        int actual = cola.desencolar();
+        int nivelActual = niveles.get(actual);
+
+        // Limite de exploracion
+        if (nivelActual >= nivelMax) break;
+
+        // Si los contactos directos son suficientes,
+        // no exploramos sus conexiones.
+        if (nivelActual == 1 &&
+            candidatosNivel1 >= limiteCandidatos) {
+            continue;
+        }
+
+        // Recorremos las conexiones
+        for (Arista conexion : adyacencia.get(actual)) {
+
+            if (conexion.estado == 2 ||
+                niveles.containsKey(conexion.destino)) {
+                continue;
+            }
+
+            Jugador vecino = catalogo.get(conexion.destino);
+
+            if (vecino == null) continue;
+
+            niveles.put(conexion.destino, nivelActual + 1);
+
+            // FILTROS ESTRICTOS
+            if (!vecino.localidad.equals(locPartido) ||
+                !vecino.genero.equals(genReq)) {
+                continue;
+            }
+
+            // CALCULO DEL PESO FINAL
+            int nivelDestino = nivelActual + 1;
+
+            int pesoDefinitivo =
+                (1000 / nivelDestino) + conexion.peso;
+
+            // INGRESO AL BST
+            arbol.insertar(vecino, pesoDefinitivo);
+
+            if (nivelDestino == 1) {
+                candidatosNivel1++;
+            }
+
+            cola.encolar(conexion.destino);
+        }
+    }
+}
+    }
+
+                        </code></pre>
+                    </div>
+
+                    <!-- BLOQUE 4: ÁRBOL BST Y EXTRACCIÓN -->
+                    <div class="fragment" data-fragment-index="3" style="width: 100%;">
+                        <div class="code-header">
+                            <div class="window-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+                            <span>ArbolBST.java — Ordenamiento Dinámico y Regla de Negocio</span>
+                            <span style="color: var(--lime);">Paso 4 de 4</span>
+                        </div>
+                        <pre><code class="language-java" data-trim data-line-numbers>
+
+public class ArbolBST {
+
+    static class Nodo {
+        Jugador jugador;
+        int peso;
+        Nodo izquierda;
+        Nodo derecha;
+
+        Nodo(Jugador jugador, int peso) {
+            this.jugador = jugador;
+            this.peso = peso;
+        }
+    }
+
+    Nodo raiz;
+
+    // Inserta un jugador en el árbol
+    public void insertar(Jugador jugador, int peso) {
+        raiz = insertarRec(raiz, jugador, peso);
+    }
+
+    // Menores o iguales a la izquierda, mayores a la derecha
+    private Nodo insertarRec(Nodo actual, Jugador jugador, int peso) {
+
+        if (actual == null) {
+            return new Nodo(jugador, peso);
+        }
+
+        if (peso <= actual.peso) {
+            actual.izquierda = insertarRec(
+                actual.izquierda, jugador, peso
+            );
+        } else {
+            actual.derecha = insertarRec(
+                actual.derecha, jugador, peso
+            );
+        }
+
+        return actual;
+    }
+
+    // Inicia el recorrido desde la raíz
+    public void inOrderInverso(Cola<Jugador> colaDespacho) {
+        inOrderInverso(raiz, colaDespacho);
+    }
+
+    // Recorre de mayor a menor puntuación
+    // Derecha -> Raíz -> Izquierda
+    private void inOrderInverso(
+        Nodo actual,
+        Cola<Jugador> colaDespacho) {
+
+        if (actual == null) {
+            return;
+        }
+
+        inOrderInverso(actual.derecha, colaDespacho);
+
+        colaDespacho.encolar(actual.jugador);
+
+        inOrderInverso(actual.izquierda, colaDespacho);
+    }
+}
+
+                        </code></pre>
+                    </div>
+
+                    </div>
+                </div>
+            </section>
+
+<!-- ==========================================
+                 DIAPOSITIVA 6: LÓGICA DE NOTIFICACIONES (REGLA DEL X3)
+                 ========================================== -->
+            <section data-auto-animate>
+                <h2><span class="accent-bar"></span>Lógica de Notificaciones: La Regla del Multiplicador (x3)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 24px;">
+                   Priorización y envío dosificado de candidatos para cubrir los cupos faltantes sin generar notificaciones masivas.
+                </p>
+
+                <div class="grid-2" style="align-items: center;">
+                    <!-- Izquierda: Visualización Tipo Embudo / Fórmula Matemática Animada + Timeout -->
+                    <div class="glass-card">
+                        <span class="tag-pill tag-lime">Cálculo Dinámico de Tanda</span>
+                        <h3 style="margin-top: 14px; font-size: 1.25em;">Embudo de Dosificación de Envíos</h3>
+                        <p style="font-size: 0.78em; color: var(--text-muted);">
+Los candidatos encontrados se organizan en el BST y se recuperan de mayor a menor puntuación.                        </p>
+
+                        <div class="formula-showcase fragment fade-up" data-fragment-index="1">
+                            <div class="math-box">
+                                <div class="math-number">2</div>
+                                <div class="math-label">Cupos Faltantes</div>
+                            </div>
+                            <div class="math-op">×</div>
+                            <div class="math-box">
+                                <div class="math-number" style="color: #FFF;">3</div>
+                                <div class="math-label">Factor Demanda</div>
+                            </div>
+                            <div class="math-op">=</div>
+                            <div class="math-box result">
+                                <div class="math-number">6</div>
+                                <div class="math-label" style="color: var(--lime);">Candidatos por Tanda</div>
+                            </div>
+                        </div>
+
+                        <!-- Barra de Progreso Simulando Timeout -->
+                        <div class="timeout-bar-wrap fragment fade-up" data-fragment-index="2">
+                            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.66em;">
+                                <span style="color: var(--cyan);">⏱ VENTANA DE ESPERA (TIMEOUT)</span>
+                                <span style="color: var(--lime);">Escuchando confirmaciones...</span>
+                            </div>
+                            <div class="timeout-track">
+                                <div class="timeout-fill"></div>
+                            </div>
+                            <div style="font-size: 0.7em; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                <span>Enviado al: <strong>Lote de 6 (Tanda 1)</strong></span>
+                                <span style="color: var(--coral);">El resto aguarda en la Cola</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Derecha: Fragmento de Código Java Limpio (Main) -->
+                    <div class="code-window code-window--compact fragment fade-up" data-fragment-index="3">
+                        <div class="code-header">
+                            <div class="window-dots">
+                                <span class="dot-r"></span>
+                                <span class="dot-y"></span>
+                                <span class="dot-g"></span>
+                            </div>
+                            <span>Main.java — Pipeline de Ejecución Directa</span>
+                            <span style="color: var(--cyan);">El Director de Orquesta</span>
+                        </div>
+                        <pre><code class="language-java">
+// 1. INGESTA
+GrafoAlquiPadel grafo = new GrafoAlquiPadel();
+CargadorGrafo.cargar(db, grafo);
+
+
+// 2. CREACION DEL PARTIDO
+ArbolBST arbol = new ArbolBST();
+
+Partido partido = new Partido(
+    idCreador, "Pila", "Masc", 2
+);
+
+// REGLA X3
+int limiteEnvios = partido.cuposFaltantes * 3;
+
+
+// 3. BUSQUEDA BFS
+grafo.buscarCandidatosBFS(
+    partido.creadorId,
+    "Pila",
+    "M",
+    2,
+    limiteEnvios,
+    arbol
+);
+
+
+// 4. VOLCADO AL ORDEN DE PRIORIDAD
+Cola<Jugador> colaDespacho = new Cola<>();
+
+arbol.inOrderInverso(colaDespacho);
+
+
+// 5. EXTRACCION DE LA PRIMERA TANDA
+Lista<Jugador> tanda1 = new Lista<>();
+
+for (int i = 0;
+     i < limiteEnvios && !colaDespacho.estaVacia();
+     i++) {
+
+    tanda1.add(colaDespacho.desencolar());
+}
+
+
+// 6. NOTIFICACIONES
+notificador.enviarAvisos(tanda1);
+                        </code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 DIAPOSITIVA 7: CONCLUSIÓN FINAL
+                 ========================================== -->
+            <section data-auto-animate>
+                <h2><span class="accent-bar"></span>Conclusiones e Impacto de la Arquitectura</h2>
+                <p style="color: var(--text-muted); margin-bottom: 34px;">
+                    Síntesis del valor técnico y operativo alcanzado con el motor de recomendación de AlquiPadel.
+                </p>
+
+                <div class="grid-3">
+                    <!-- Tarjeta 1: Optimización de Recursos -->
+                    <div class="glass-card conclusion-card fragment fade-up" data-fragment-index="1">
+                        <div>
+                            <div class="icon-circle">
+                                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                </svg>
+                            </div>
+                            <span class="tag-pill tag-cyan">Eficiencia en Servidor</span>
+                            <h3 style="margin-top: 14px; font-size: 1.28em;">1. Optimización de Recursos</h3>
+                            <p style="font-size: 0.8em; color: #CBD5E1; margin-top: 12px;">
+                                La <strong>base de datos se mantiene pasiva</strong> almacenando hechos históricos simples, mientras que la memoria RAM instancia únicamente <strong>grafos dispersos acotados</strong> mediante Listas de Adyacencia, liberando recursos al finalizar cada tanda.
+                            </p>
+                        </div>
+                      
+                    </div>
+
+                    <!-- Tarjeta 2: Poda Temprana Eficiente -->
+                    <div class="glass-card conclusion-card card-2 fragment fade-up" data-fragment-index="2">
+                        <div>
+                            <div class="icon-circle">
+                                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                </svg>
+                            </div>
+                            <span class="tag-pill tag-coral">Búsqueda inteligente</span>
+                            <h3 style="margin-top: 14px; font-size: 1.28em;">2. BFS y filtros de compatibilidad</h3>
+                            <p style="font-size: 0.8em; color: #CBD5E1; margin-top: 12px;">
+                                Permiten explorar la red por niveles, descartar jugadores incompatibles y evitar expansiones innecesarias cuando ya se alcanzó el límite de candidatos.
+                            </p>
+                        </div>
+                        
+                    </div>
+
+                    <!-- Tarjeta 3: Teoría Aplicada al Negocio -->
+                    <div class="glass-card conclusion-card card-3 lime-glow fragment fade-up" data-fragment-index="3">
+                        <div>
+                            <div class="icon-circle">
+                                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#CCFF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                                    <polyline points="16 7 22 7 22 13"></polyline>
+                                </svg>
+                            </div>
+                            <span class="tag-pill tag-lime">Priorización y despacho</span>
+                            <h3 style="margin-top: 14px; font-size: 1.28em; color: var(--lime);">3. BST y cola FIFO</h3>
+                            <p style="font-size: 0.8em; color: #CBD5E1; margin-top: 12px;">
+                                La sinergia entre <strong>BFS</strong> (proximidad social por niveles) y un <strong>Árbol BST con In-Order Inverso</strong> (inserción y ordenamiento dinámico en $O(\log n)$) resuelve el "Falta Uno", maximizando la ocupación de canchas y la rentabilidad de <strong>AlquiPadel</strong>.
+                            </p>
+                        </div>
+                        <div style="margin-top: 22px; font-family: var(--font-mono); font-size: 0.68em; color: var(--lime); font-weight: 700;">
+                            BFS + BST O(log n) ➔ +Rentabilidad
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fragment fade-up" data-fragment-index="4" style="text-align: center; margin-top: 42px;">
+                    <span class="sport-badge" style="margin-bottom: 0; font-size: 0.78em; padding: 10px 28px;">
+                        <span class="dot"></span>
+                        ¡MUCHAS GRACIAS! · ¿PREGUNTAS DEL TRIBUNAL? — GRUPO AGUSTÍN²
+                    </span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Pie de página institucional persistente -->
+    <div class="deck-footer">
+        <div><b>ALQUIPADEL</b> · Sistema de Recomendación para Partidos Abiertos</div>
+        <div>Grupo <b>Agustín²</b> · Algoritmos y Estructuras de Datos III · IPFPR</div>
+    </div>
+
+    <!-- Scripts Oficiales Reveal.js 5.x + Highlight.js Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+    <script>
+        Reveal.initialize({
+            width: 1920,
+            height: 1080,
+            margin: 0.04,
+            minScale: 0.2,
+            maxScale: 2.0,
+            controls: true,
+            controlsLayout: 'bottom-right',
+            progress: true,
+            center: true,
+            hash: true,
+            transition: 'convex',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            plugins: [ RevealHighlight ]
+        });
+    </script>
+    <script>
+        // Barra de navegación del reel de código (slide "Arquitectura de Ejecución"):
+        // salta al fragmento correspondiente y refleja el paso activo.
+        (function () {
+            const reel = document.getElementById('codeReel');
+            if (!reel) return;
+            const btns = Array.from(reel.querySelectorAll('.code-nav-btn'));
+            btns.forEach(btn => btn.addEventListener('click', () => {
+                Reveal.slide(4, 0, parseInt(btn.dataset.f, 10));
+                btn.blur();
+            }));
+            function syncNav() {
+                const f = Reveal.getIndices().f;
+                const step = (typeof f === 'number' && f >= 0) ? f : -1;
+                btns.forEach(btn => btn.classList.toggle('active', parseInt(btn.dataset.f, 10) === step));
+            }
+            Reveal.on('ready', syncNav);
+            Reveal.on('slidechanged', syncNav);
+            Reveal.on('fragmentshown', syncNav);
+            Reveal.on('fragmenthidden', syncNav);
+        })();
+    </script>
+</body>
+</html>
