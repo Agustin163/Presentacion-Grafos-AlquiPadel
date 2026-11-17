@@ -6,8 +6,6 @@ Presentación del **Grupo A²** para **Algoritmos y Estructuras de Datos 3**, Te
 
 **Caso de aplicación:** AlquiPadel, plataforma de alquiler de canchas de pádel.
 
-🔗 **Ver la presentación:** https://agustin163.github.io/Presentacion-Grafos-AlquiPadel/
-
 ## ¿De qué trata?
 
 En AlquiPadel hay partidos abiertos que necesitan jugadores para completarse. Este proyecto propone un sistema de recomendación basado en un **grafo bipartito ponderado** que le sugiere a cada jugador los partidos que mejor le calzan según su **categoría** y su **localidad**.
